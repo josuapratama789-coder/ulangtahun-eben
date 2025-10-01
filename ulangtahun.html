@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Selamat Ulang Tahun Eben 🎉</title>
+<style>
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color:#fff;
+  }
+  .card{
+    width: min(900px, 94%);
+    background: rgba(255,255,255,0.05);
+    border-radius:20px;
+    padding:28px;
+    display:grid;
+    grid-template-columns: 280px 1fr;
+    gap:28px;
+    align-items:center;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    position:relative;
+    overflow:hidden;
+  }
+  .photo{
+    width:220px;
+    height:220px;
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    border: 2px solid rgba(255,255,255,0.2);
+    margin-bottom:12px;
+  }
+  .photo img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .title{ font-size:28px; margin:0; }
+  .subtitle{ color:#ddd; margin:10px 0 18px 0; }
+  .message{
+    background:rgba(255,255,255,0.08);
+    border-radius:12px;
+    padding:18px;
+    line-height:1.5;
+  }
+  .karaoke p{
+    margin:8px 0;
+    font-size:18px;
+    font-weight:600;
+    opacity:0;
+    transition:all .6s ease;
+  }
+  .karaoke p.show{
+    opacity:1;
+    transform:translateY(0);
+  }
+  .btn{
+    margin-top:12px;
+    background:#7bd389;
+    color:#042017;
+    border:none;
+    padding:10px 16px;
+    border-radius:10px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+  }
+  .btn.secondary{
+    background:#444;
+    color:#fff;
+  }
+  canvas#confetti{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    z-index:10;
+  }
+  @media(max-width:780px){
+    .card{ grid-template-columns: 1fr; text-align:center; }
+    .photo{ margin:auto; }
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <canvas id="confetti"></canvas>
+    <div class="photo-wrap">
+      <div class="photo">
+        <img id="photo" src="" alt="Foto ulang tahun Eben">
+      </div>
+      <input type="file" id="upload" accept="image/*" style="display:none">
+      <button class="btn secondary" onclick="document.getElementById('upload').click()">Upload Foto</button>
+    </div>
+    <div class="content">
+      <h1 class="title">🎂 Selamat Ulang Tahun, Eben!</h1>
+      <div class="subtitle">Semoga hari spesial ini penuh kebahagiaan, tawa, dan berkah 🎉</div>
+      <div class="message">
+        <div class="karaoke" id="karaokeArea">
+          <p id="line1"></p>
+          <p id="line2"></p>
+          <p id="line3"></p>
+        </div>
+        <button class="btn" id="startBtn">Mulai Ucapan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Musik ulang tahun -->
+  <audio id="music" loop>
+    <source src="https://www.bensound.com/bensound-music/bensound-birthday.mp3" type="audio/mpeg">
+    Browser tidak mendukung audio
+  </audio>
+
+<script>
+const lines = [
+  "Selamat ulang tahun Eben 🎂🥳",
+  "Semoga panjang umur dan sehat selalu 🙏",
+  "Semoga sukses, bahagia, dan dilancarkan semua urusannya 🎉"
+];
+const lineEls = [
+  document.getElementById('line1'),
+  document.getElementById('line2'),
+  document.getElementById('line3')
+];
+const btn = document.getElementById('startBtn');
+const confettiCanvas = document.getElementById('confetti');
+const music = document.getElementById('music');
+
+// Upload foto dari galeri
+const upload = document.getElementById('upload');
+const photoEl = document.getElementById('photo');
+upload.addEventListener('change', function(){
+  const file = this.files[0];
+  if(file){
+    const reader = new FileReader();
+    reader.onload = function(e){
+      photoEl.src = e.target.result;
+    }
+    reader.readAsDataURL(file);
+  }
+});
+
+// Mulai teks & musik
+function playLines(){
+  music.play();
+  let idx=0;
+  btn.disabled = true;
+  btn.textContent = "Sedang Berjalan...";
+  const showNext = () => {
+    lineEls.forEach(el=>el.classList.remove('show'));
+    lineEls[0].textContent = lines[idx] || "";
+    lineEls[0].classList.add('show');
+    setTimeout(()=>{ lineEls[1].textContent = lines[(idx+1)%lines.length]; lineEls[1].classList.add('show'); },500);
+    setTimeout(()=>{ lineEls[2].textContent = lines[(idx+2)%lines.length]; lineEls[2].classList.add('show'); },1000);
+    burstConfetti();
+    idx++;
+    if(idx<lines.length){
+      setTimeout(showNext,2000);
+    } else {
+      btn.disabled = false;
+      btn.textContent = "Ulangi Ucapan";
+    }
+  };
+  showNext();
+}
+
+// Confetti
+function burstConfetti(){
+  const ctx = confettiCanvas.getContext('2d');
+  const w = confettiCanvas.width = confettiCanvas.clientWidth;
+  const h = confettiCanvas.height = confettiCanvas.clientHeight;
+  const particles = [];
+  const colors = ["#7bd389","#ffd166","#ff6b6b","#72d6ff","#c492ff","#fff48a"];
+  for(let i=0;i<60;i++){
+    particles.push({
+      x: Math.random()*w,
+      y: -10,
+      vx:(Math.random()-0.5)*6,
+      vy:2+Math.random()*6,
+      r:6+Math.random()*6,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      t:0
+    });
+  }
+  let time=0;
+  function render(){
+    time++;
+    ctx.clearRect(0,0,w,h);
+    for(let p of particles){
+      p.x+=p.vx;
+      p.y+=p.vy;
+      p.vy+=0.1;
+      p.t++;
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      ctx.rotate(p.t*0.06);
+      ctx.fillStyle=p.color;
+      ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.6);
+      ctx.restore();
+    }
+    if(time<100) requestAnimationFrame(render);
+  }
+  render();
+}
+btn.addEventListener('click', playLines);
+function resizeCanvas(){confettiCanvas.width=confettiCanvas.clientWidth;confettiCanvas.height=confettiCanvas.clientHeight;}
+window.addEventListener('resize',resizeCanvas);resizeCanvas();
+</script>
+</body>
+</html>
